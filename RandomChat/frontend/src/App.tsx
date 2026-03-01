@@ -44,7 +44,7 @@ interface UserProfile {
 
 const INTERESTS_OPTIONS = ['Gaming', 'Music', 'Tech', 'Art', 'Movies', 'Travel', 'Sports', 'Anime', 'Books', 'Food', 'Fitness', 'Photography'];
 const REPORT_REASONS = ['SPAM', 'ABUSE', 'EXPLICIT_CONTENT', 'HARASSMENT', 'UNDERAGE', 'OTHER'];
-const API = 'http://localhost:8080/api';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 // ⚠️ Admin emails — only these users see the Admin panel
 const ADMIN_EMAILS = ['rupuom7@gmail.com'];
 

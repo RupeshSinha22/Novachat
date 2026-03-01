@@ -79,6 +79,7 @@ RandomChat/frontend/dist-ssr/
 RandomChat/frontend/.env
 RandomChat/frontend/.env.*
 !RandomChat/frontend/.env.example
+!RandomChat/frontend/.env.production
 RandomChat/frontend/package-lock.json
 RandomChat/frontend/vite.log
 RandomChat/frontend/*.local

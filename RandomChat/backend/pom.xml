@@ -99,6 +99,13 @@
 			<artifactId>razorpay-java</artifactId>
 			<version>1.4.7</version>
 		</dependency>
+
+		<!-- Cloudinary — cloud file storage for uploads (replaces local /uploads/ folder) -->
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.36.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -12,10 +12,13 @@ import com.randomchat.backend.repository.PremiumRequestRepository;
 import com.randomchat.backend.service.FriendshipService;
 import com.randomchat.backend.service.MatchmakingService;
 import com.randomchat.backend.service.UserService;
+import com.cloudinary.Cloudinary;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Files;
@@ -38,6 +41,9 @@ public class ApiController {
     private final FriendshipService friendshipService;
     private final ChatMessageRepository chatMessageRepository;
     private final PremiumRequestRepository premiumRequestRepository;
+
+    @Autowired(required = false)
+    private Cloudinary cloudinary;
 
     // ──────────────────────────────────────────
     // User profiles
@@ -68,12 +74,25 @@ public class ApiController {
             @PathVariable("userId") String userId,
             @RequestParam("file") MultipartFile file) {
         try {
-            String uploadDir = "uploads/avatars/";
-            Files.createDirectories(Paths.get(uploadDir));
-            String fileName = userId + "_" + UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path p = Paths.get(uploadDir + fileName);
-            Files.write(p, file.getBytes());
-            String url = "http://localhost:8080/uploads/avatars/" + fileName;
+            String url;
+            if (cloudinary != null) {
+                // Cloud storage (production)
+                Map uploadResult = cloudinary.uploader().upload(file.getBytes(), Map.of(
+                        "folder", "novachat/avatars",
+                        "resource_type", "image"));
+                url = (String) uploadResult.get("secure_url");
+            } else {
+                // Local storage (development)
+                String uploadDir = "uploads/avatars/";
+                Files.createDirectories(Paths.get(uploadDir));
+                String fileName = userId + "_" + UUID.randomUUID() + "_" + file.getOriginalFilename();
+                Path p = Paths.get(uploadDir + fileName);
+                Files.write(p, file.getBytes());
+                url = ServletUriComponentsBuilder.fromCurrentContextPath()
+                        .path("/uploads/avatars/")
+                        .path(fileName)
+                        .toUriString();
+            }
             userService.updateProfile(userId, null, url, null, null, null, null, null);
             return ResponseEntity.ok(Map.of("url", url));
         } catch (Exception e) {
