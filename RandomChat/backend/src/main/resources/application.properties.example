@@ -1,0 +1,25 @@
+spring.application.name=backend
+spring.datasource.url=jdbc:postgresql://localhost:5432/randomchat
+spring.datasource.username=postgres
+spring.datasource.password=YOUR_DB_PASSWORD_HERE
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# Max file size for uploads
+spring.servlet.multipart.max-file-size=50MB
+spring.servlet.multipart.max-request-size=50MB
+
+# Redis — used for matchmaking queue, session tracking, rate limiting
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+spring.data.redis.timeout=2000ms
+# Set password if your Redis requires one:
+# spring.data.redis.password=yourpassword
+
+# ─── Razorpay Payment Gateway ─────────────────────────────
+razorpay.key_id=YOUR_RAZORPAY_KEY_ID
+razorpay.key_secret=YOUR_RAZORPAY_KEY_SECRET
+# Amount in paise (₹5 = 500 paise) — TEST PRICE, change to 29900 for ₹299 in production
+razorpay.premium_amount=29900
+razorpay.currency=INR

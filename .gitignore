@@ -1,0 +1,88 @@
+# ===========================
+# Root .gitignore
+# ===========================
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# --- JVM crash & replay logs ---
+hs_err_pid*.log
+replay_pid*.log
+
+# --- Misc boot/debug logs at root ---
+boot_error.txt
+boot_stderr.txt
+boot_stdout.txt
+
+# --- IDE / Editor ---
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Node (root level) ---
+node_modules/
+package-lock.json
+
+# --- Environment / Secrets ---
+.env
+.env.*
+!.env.example
+
+# ===========================
+# Backend (Java / Spring Boot / Maven)
+# ===========================
+RandomChat/backend/target/
+RandomChat/backend/.mvn/wrapper/maven-wrapper.jar
+RandomChat/backend/uploads/
+
+# Backend secrets / config with credentials
+RandomChat/backend/src/main/resources/application.properties
+
+# Backend log files
+RandomChat/backend/*.log
+RandomChat/backend/*.txt
+RandomChat/backend/HELP.md
+
+# Built frontend assets bundled into backend static resources (build output)
+RandomChat/backend/src/main/resources/static/
+
+# Root-level test/scratch files
+RandomChat/test.js
+
+# STS
+RandomChat/backend/.apt_generated
+RandomChat/backend/.classpath
+RandomChat/backend/.factorypath
+RandomChat/backend/.project
+RandomChat/backend/.settings/
+RandomChat/backend/.springBeans
+RandomChat/backend/.sts4-cache
+
+# ===========================
+# Frontend (Vite / Node)
+# ===========================
+RandomChat/frontend/node_modules/
+RandomChat/frontend/dist/
+RandomChat/frontend/dist-ssr/
+RandomChat/frontend/.env
+RandomChat/frontend/.env.*
+!RandomChat/frontend/.env.example
+RandomChat/frontend/package-lock.json
+RandomChat/frontend/vite.log
+RandomChat/frontend/*.local
+
+# Frontend logs
+RandomChat/frontend/logs/
+RandomChat/frontend/*.log
