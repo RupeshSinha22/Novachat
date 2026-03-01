@@ -777,6 +777,16 @@ export default function App() {
     } catch (_) { }
   };
 
+  // Poll friend status while chatting so "Pending" updates when the other user accepts
+  useEffect(() => {
+    if (appState !== 'CHATTING' || !userId || !strangerUserId) return;
+    if (friendStatus !== 'PENDING_SENT' && friendStatus !== 'PENDING_RECEIVED') return;
+    const interval = setInterval(() => {
+      checkFriendStatus(userId, strangerUserId);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [appState, userId, strangerUserId, friendStatus]);
+
   const sendFriendRequest = async () => {
     if (!userId || !strangerUserId) return;
     try {
