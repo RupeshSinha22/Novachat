@@ -16,7 +16,6 @@ export type ChatMessage = {
 };
 
 import { Client, IMessage } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 
 export class ChatService {
   private stompClient: Client;
@@ -41,7 +40,7 @@ export class ChatService {
     this.onMatchReceived = onMatch;
 
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      brokerURL: 'ws://localhost:8080/ws',
       reconnectDelay: 3000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,

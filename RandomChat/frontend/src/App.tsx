@@ -48,6 +48,22 @@ const API = 'http://localhost:8080/api';
 // ⚠️ Admin emails — only these users see the Admin panel
 const ADMIN_EMAILS = ['rupuom7@gmail.com'];
 
+// Lazy-load Razorpay SDK only when payment is needed
+let razorpayLoaded = false;
+function loadRazorpay(): Promise<void> {
+  if (razorpayLoaded || (window as any).Razorpay) {
+    razorpayLoaded = true;
+    return Promise.resolve();
+  }
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => { razorpayLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
+    document.head.appendChild(script);
+  });
+}
+
 function generateNickname() {
   const adj = ['Swift', 'Cosmic', 'Shadow', 'Neon', 'Frost', 'Blaze', 'Storm', 'Ghost', 'Luna', 'Echo'];
   const noun = ['Wolf', 'Tiger', 'Phoenix', 'Raven', 'Cipher', 'Nova', 'Vortex', 'Hawk', 'Drake', 'Fox'];
@@ -1180,9 +1196,12 @@ export default function App() {
                 {/* Input + suggestions */}
                 <div className="interest-input-wrap">
                   <input
+                    id="sidebar-interest-input"
+                    name="sidebar-interest"
                     className="interest-input"
                     type="text"
                     placeholder="Type an interest…"
+                    aria-label="Type an interest"
                     value={interestInput}
                     onChange={e => { setInterestInput(e.target.value); setShowSuggestions(true); }}
                     onKeyDown={e => {
@@ -1253,7 +1272,8 @@ export default function App() {
                   {avatarUploading && <div className="avatar-uploading">...</div>}
                   <div className="user-status-dot" />
                 </div>
-                <input ref={avatarInputRef} type="file" style={{ display: 'none' }} accept="image/*"
+                <input ref={avatarInputRef} id="avatar-upload" name="avatar" type="file" style={{ display: 'none' }} accept="image/*"
+                  aria-label="Upload avatar"
                   onChange={e => e.target.files?.[0] && uploadAvatar(e.target.files[0])} />
                 <div className="user-meta">
                   <div className="user-name">{profile?.nickname || 'Guest'}</div>
@@ -1374,17 +1394,17 @@ export default function App() {
 
                       <div className="hero">
                         <div className="hero-icon"><Globe size={48} strokeWidth={1.5} /></div>
-                        <h1>Meet Someone New</h1>
-                        <p>Connect with millions of strangers instantly. Anonymous, encrypted, free.</p>
+                        <h1>Random Stranger Chat</h1>
+                        <p>Talk to strangers worldwide — anonymous, instant, and free. Your next great conversation starts here.</p>
                       </div>
 
                       <div className="start-card">
                         <div className="start-card-inner">
                           <div className="field-group">
-                            <label>Your Display Name</label>
+                            <label htmlFor="display-name">Your Display Name</label>
                             <div className="input-with-icon">
                               <User size={16} />
-                              <input type="text" value={profile?.nickname || ''} maxLength={20}
+                              <input id="display-name" name="displayName" type="text" value={profile?.nickname || ''} maxLength={20}
                                 onChange={e => setProfile(p => p ? { ...p, nickname: e.target.value } : p)}
                                 placeholder="Enter nickname..." className="text-field" />
                             </div>
@@ -1393,7 +1413,7 @@ export default function App() {
                           {/* Gender Selection — only show if not previously saved */}
                           {!localStorage.getItem('user_gender') && (
                             <div className="field-group">
-                              <label>I am</label>
+                              <span className="field-label">I am</span>
                               <div className="gender-selector">
                                 <button className={`gender-btn ${selectedGender === 'MALE' ? 'active male' : ''}`}
                                   onClick={() => setSelectedGender('MALE')}>
@@ -1413,7 +1433,7 @@ export default function App() {
 
                           {/* Gender Filter — free for all users */}
                           <div className="field-group">
-                            <label>Chat with</label>
+                            <span className="field-label">Chat with</span>
                             <div className="gender-selector">
                               <button className={`gender-btn ${genderFilter === 'ANY' ? 'active other' : ''}`}
                                 onClick={() => setGenderFilter('ANY')}>
@@ -1431,7 +1451,7 @@ export default function App() {
                           </div>
 
                           <div className="field-group">
-                            <label>Chat Interests <span className="label-hint">(optional — helps matching)</span></label>
+                            <label htmlFor="home-interest-input">Chat Interests <span className="label-hint">(optional — helps matching)</span></label>
 
                             {/* Selected chips */}
                             {selectedInterests.length > 0 && (
@@ -1447,9 +1467,12 @@ export default function App() {
 
                             <div className="interest-input-wrap">
                               <input
+                                id="home-interest-input"
+                                name="interest"
                                 className="interest-input"
                                 type="text"
                                 placeholder="e.g. Gaming, Music, Tech…"
+                                aria-label="Chat interests"
                                 value={interestInput}
                                 onChange={e => { setInterestInput(e.target.value); setShowSuggestions(true); }}
                                 onKeyDown={e => {
@@ -1492,9 +1515,12 @@ export default function App() {
                                   <span>What is <strong>{captchaA} + {captchaB}</strong> ?</span>
                                 </div>
                                 <input
+                                  id="captcha-answer"
+                                  name="captcha"
                                   type="text"
                                   className="captcha-input"
                                   placeholder="Answer"
+                                  aria-label="Captcha answer"
                                   value={captchaAnswer}
                                   onChange={e => {
                                     setCaptchaAnswer(e.target.value);
@@ -1662,8 +1688,8 @@ export default function App() {
                           {/* Media Tray */}
                           {showMediaTray && (
                             <div className="media-tray">
-                              <label className="media-tray-btn" title="Gallery">
-                                <input type="file" accept="image/*,video/*" style={{ display: 'none' }}
+                              <label className="media-tray-btn" title="Gallery" htmlFor="gallery-upload">
+                                <input id="gallery-upload" name="gallery" type="file" accept="image/*,video/*" style={{ display: 'none' }}
                                   onClick={(e) => {
                                     const canSend = isAdmin || isPremium || isStrangerPremium || !localStorage.getItem('photo_sent');
                                     if (!canSend) { e.preventDefault(); setModal('upgrade'); }
@@ -1671,9 +1697,9 @@ export default function App() {
                                   onChange={e => { if (e.target.files?.[0]) { setSelectedFile(e.target.files[0]); e.target.value = ''; setShowMediaTray(false); } }} />
                                 <ImageIcon size={20} /><span>Gallery</span>
                               </label>
-                              <label className="media-tray-btn" title="Camera">
+                              <label className="media-tray-btn" title="Camera" htmlFor="camera-upload">
                                 {/* capture="environment" only works on mobile — on desktop, omit it so the OS picks the right dialog */}
-                                <input type="file" accept="image/*"
+                                <input id="camera-upload" name="camera" type="file" accept="image/*"
                                   {...(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? { capture: 'environment' as 'environment' } : {})}
                                   style={{ display: 'none' }}
                                   onClick={(e) => {
@@ -2112,15 +2138,16 @@ export default function App() {
 
                       <div className="dm-input-bar">
 
-                        <input type="text" className="dm-input" value={dmInput}
+                        <input id="dm-input" name="dmMessage" type="text" className="dm-input" value={dmInput}
+                          aria-label="Direct message input"
                           onChange={e => setDmInput(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendDmMessage(); } }}
                           placeholder={dmUploading ? 'Uploading...' : `Message ${dmFriendNickname}...`}
                           disabled={dmUploading} autoFocus />
 
                         <div style={{ display: 'flex', gap: '0.2rem', flexShrink: 0, alignItems: 'center' }}>
-                          <label className={`dm-attach-btn auto-hide ${dmInput.length > 0 ? 'hidden' : ''}`} title="Attach media" style={{ cursor: dmUploading ? 'not-allowed' : 'pointer', margin: 0, opacity: dmUploading ? 0.35 : 1 }}>
-                            <input type="file" style={{ display: 'none' }} accept="image/*,video/*" disabled={dmUploading}
+                          <label className={`dm-attach-btn auto-hide ${dmInput.length > 0 ? 'hidden' : ''}`} title="Attach media" htmlFor="dm-gallery-upload" style={{ cursor: dmUploading ? 'not-allowed' : 'pointer', margin: 0, opacity: dmUploading ? 0.35 : 1 }}>
+                            <input id="dm-gallery-upload" name="dmGallery" type="file" style={{ display: 'none' }} accept="image/*,video/*" disabled={dmUploading}
                               onClick={(e) => {
                                 const canSend = isAdmin || isPremium || isStrangerPremium || !localStorage.getItem('photo_sent');
                                 if (!canSend) {
@@ -2134,8 +2161,8 @@ export default function App() {
                               }} />
                             <ImageIcon size={18} />
                           </label>
-                          <label className={`dm-attach-btn auto-hide ${dmInput.length > 0 ? 'hidden' : ''}`} title="Open Camera" style={{ cursor: dmUploading ? 'not-allowed' : 'pointer', margin: 0, opacity: dmUploading ? 0.35 : 1 }}>
-                            <input type="file" style={{ display: 'none' }} accept="image/*" capture="environment" disabled={dmUploading}
+                          <label className={`dm-attach-btn auto-hide ${dmInput.length > 0 ? 'hidden' : ''}`} title="Open Camera" htmlFor="dm-camera-upload" style={{ cursor: dmUploading ? 'not-allowed' : 'pointer', margin: 0, opacity: dmUploading ? 0.35 : 1 }}>
+                            <input id="dm-camera-upload" name="dmCamera" type="file" style={{ display: 'none' }} accept="image/*" capture="environment" disabled={dmUploading}
                               onClick={(e) => {
                                 const canSend = isAdmin || isPremium || isStrangerPremium || !localStorage.getItem('photo_sent');
                                 if (!canSend) {
@@ -2284,14 +2311,14 @@ export default function App() {
                       </div>
                     </div>
 
-                    <label>Display Name</label>
-                    <input className="modal-input" type="text" value={settingsNickname}
+                    <label htmlFor="settings-nickname">Display Name</label>
+                    <input id="settings-nickname" name="nickname" className="modal-input" type="text" value={settingsNickname}
                       maxLength={20}
                       onChange={e => setSettingsNickname(e.target.value)}
                       placeholder="Your nickname" />
 
-                    <label>Country</label>
-                    <input className="modal-input" type="text" value={settingsCountry}
+                    <label htmlFor="settings-country">Country</label>
+                    <input id="settings-country" name="country" className="modal-input" type="text" value={settingsCountry}
                       onChange={e => setSettingsCountry(e.target.value)} placeholder="e.g. India" />
 
                     <label>Interests</label>
@@ -2306,8 +2333,8 @@ export default function App() {
                     </div>
 
                     <div style={{ marginTop: '0.8rem', padding: '0.5rem', background: 'rgba(0,0,0,0.1)', borderRadius: '8px' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-                        <input type="checkbox" checked={settingsPublicProfile} onChange={e => setSettingsPublicProfile(e.target.checked)} />
+                      <label htmlFor="settings-public-profile" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                        <input id="settings-public-profile" name="publicProfile" type="checkbox" checked={settingsPublicProfile} onChange={e => setSettingsPublicProfile(e.target.checked)} />
                         Allow others to view my Profile details (Privacy)
                       </label>
                     </div>
@@ -2339,12 +2366,12 @@ export default function App() {
                     <button onClick={() => setModal('none')}><X size={18} /></button>
                   </div>
                   <div className="modal-body">
-                    <label>Reason</label>
-                    <select className="modal-input" value={reportReason} onChange={e => setReportReason(e.target.value)}>
+                    <label htmlFor="report-reason">Reason</label>
+                    <select id="report-reason" name="reportReason" className="modal-input" value={reportReason} onChange={e => setReportReason(e.target.value)}>
                       {REPORT_REASONS.map(r => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
                     </select>
-                    <label>Additional Details</label>
-                    <textarea className="modal-input" rows={3} value={reportDetails}
+                    <label htmlFor="report-details">Additional Details</label>
+                    <textarea id="report-details" name="reportDetails" className="modal-input" rows={3} value={reportDetails}
                       onChange={e => setReportDetails(e.target.value)} placeholder="Optional description..." />
                     <p className="warn-note"><AlertTriangle size={13} /> False reports may affect your account.</p>
                   </div>
@@ -2439,6 +2466,8 @@ export default function App() {
                         <button className="btn-premium-cta" onClick={async () => {
                           try {
                             setPaymentStep('processing');
+                            // Load Razorpay SDK on demand
+                            await loadRazorpay();
                             // Step 1: Create order on backend
                             const orderRes = await fetch(`${API}/payment/create-order`, {
                               method: 'POST',

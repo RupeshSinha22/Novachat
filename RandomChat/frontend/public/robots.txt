@@ -1,0 +1,13 @@
+# NovaChat - Random Stranger Chat
+# https://novachat.app
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /ws/
+
+# Sitemap
+Sitemap: https://novachat.app/sitemap.xml
+
+# Crawl delay (be polite to our server)
+Crawl-delay: 1

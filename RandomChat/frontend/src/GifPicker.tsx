@@ -40,11 +40,14 @@ export default function GifPicker({ onSelect, onClose }: GifPickerProps) {
             <div style={{ display: 'flex', padding: '12px', borderBottom: '1px solid var(--border)', alignItems: 'center', gap: '8px' }}>
                 <div style={{ flex: 1, position: 'relative' }}>
                     <input
+                        id="gif-search"
+                        name="gifSearch"
                         type="text"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && fetchGifs(query)}
                         placeholder="Search Tenor..."
+                        aria-label="Search GIFs"
                         style={{
                             width: '100%', padding: '8px 12px', paddingRight: '36px',
                             borderRadius: '20px', border: '1px solid var(--border)',

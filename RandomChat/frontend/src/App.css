@@ -812,7 +812,8 @@ a:hover {
   gap: 0.4rem;
 }
 
-.field-group label {
+.field-group label,
+.field-group .field-label {
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-2);
@@ -2243,7 +2244,8 @@ a:hover {
     border-radius: 1rem;
   }
 
-  .field-group label {
+  .field-group label,
+  .field-group .field-label {
     font-size: 0.72rem;
   }
 
