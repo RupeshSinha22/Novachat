@@ -13,6 +13,7 @@ import { ChatService, ChatMessage } from './StompClient';
 import { signInWithGoogle, logoutUser, auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import GifPicker from './GifPicker';
+import { directUpload } from './utils/upload';
 import './App.css';
 
 // ─── Types ────────────────────────────────────
@@ -460,14 +461,19 @@ export default function App() {
   const uploadAvatar = async (file: File) => {
     if (!userId) return;
     setAvatarUploading(true);
-    const form = new FormData();
-    form.append('file', file);
     try {
-      const res = await fetch(`${API}/profile/${userId}/avatar`, { method: 'POST', body: form });
-      if (res.ok) {
-        const { url } = await res.json();
-        setProfile(prev => prev ? { ...prev, avatarUrl: url } : prev);
+      const result = await directUpload(file, 'novachat/avatars');
+      if (result) {
+        // Save avatar URL to profile on the backend
+        await fetch(`${API}/profile/${userId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ avatarUrl: result.url }),
+        });
+        setProfile(prev => prev ? { ...prev, avatarUrl: result.url } : prev);
         showToast('Avatar updated!', 'success');
+      } else {
+        showToast('Avatar upload failed.', 'error');
       }
     } catch (_) { showToast('Avatar upload failed.', 'error'); }
     finally { setAvatarUploading(false); }
@@ -675,12 +681,15 @@ export default function App() {
 
   const uploadFile = async (): Promise<{ url: string; type: string } | null> => {
     if (!selectedFile) return null;
+    // Validate file size (max 10 MB)
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      showToast('File too large. Max 10 MB.', 'error');
+      setSelectedFile(null);
+      return null;
+    }
     setUploading(true);
-    const form = new FormData();
-    form.append('file', selectedFile);
     try {
-      const res = await fetch(`${API}/files/upload`, { method: 'POST', body: form });
-      return res.ok ? await res.json() : null;
+      return await directUpload(selectedFile, 'novachat/chat');
     } catch (_) { return null; }
     finally { setUploading(false); }
   };
@@ -907,11 +916,8 @@ export default function App() {
       return null;
     }
     setDmUploading(true);
-    const form = new FormData();
-    form.append('file', dmSelectedFile);
     try {
-      const res = await fetch(`${API}/files/upload`, { method: 'POST', body: form });
-      return res.ok ? await res.json() : null;
+      return await directUpload(dmSelectedFile, 'novachat/chat');
     } catch (_) {
       showToast('File upload failed.', 'error');
       return null;

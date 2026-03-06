@@ -59,12 +59,13 @@ public class ApiController {
     public ResponseEntity<UserProfile> updateProfile(
             @PathVariable("userId") String userId,
             @RequestParam(value = "nickname", required = false) String nickname,
+            @RequestParam(value = "avatarUrl", required = false) String avatarUrl,
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "language", required = false) String language,
             @RequestParam(value = "interests", required = false) String interests,
             @RequestParam(value = "gender", required = false) String gender,
             @RequestParam(value = "publicProfile", required = false) Boolean publicProfile) {
-        UserProfile p = userService.updateProfile(userId, nickname, null, country, language, interests, gender,
+        UserProfile p = userService.updateProfile(userId, nickname, avatarUrl, country, language, interests, gender,
                 publicProfile);
         return ResponseEntity.ok(p);
     }
