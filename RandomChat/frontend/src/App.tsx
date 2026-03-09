@@ -236,7 +236,9 @@ export default function App() {
         setUserId(uid);
         setIsAuth(true);
         const email = firebaseUser.email || '';
-        setIsAdmin(ADMIN_EMAILS.includes(email));
+        const adminStatus = ADMIN_EMAILS.includes(email);
+        setIsAdmin(adminStatus);
+        if (adminStatus) setIsPremium(true);
         localStorage.setItem('firebase_uid', uid);
         fetchProfile(uid, googleName);
       } else {
@@ -487,7 +489,9 @@ export default function App() {
         const displayName = user.displayName || '';
         setUserId(user.uid);
         setIsAuth(true);
-        setIsAdmin(ADMIN_EMAILS.includes(user.email || ''));
+        const adminStatus = ADMIN_EMAILS.includes(user.email || '');
+        setIsAdmin(adminStatus);
+        if (adminStatus) setIsPremium(true);
         localStorage.setItem('firebase_uid', user.uid);
         if (displayName) localStorage.setItem('user_nickname', displayName);
         await fetchProfile(user.uid, displayName);
@@ -1259,7 +1263,7 @@ export default function App() {
               )}
 
               {/* Nova Plus */}
-              {isPremium ? (
+              {(isAdmin || isPremium) ? (
                 <div className="premium-card" style={{ borderColor: 'var(--accent)', background: 'rgba(168, 85, 247, 0.1)' }}>
                   <div className="premium-badge" style={{ color: 'var(--accent)' }}><Crown size={14} /> Nova Plus Active ✓</div>
                   <p style={{ color: 'var(--accent)', fontSize: '0.75rem' }}>Unlimited photos &amp; priority matching</p>
@@ -2269,7 +2273,7 @@ export default function App() {
               <Settings size={20} />
               <span>Settings</span>
             </button>
-            {isPremium ? (
+            {(isAdmin || isPremium) ? (
               <button className="mobile-nav-btn" style={{ color: 'var(--accent)' }} onClick={() => { }}>
                 <Crown size={20} />
                 <span style={{ fontSize: '0.6rem' }}>Plus ✓</span>
